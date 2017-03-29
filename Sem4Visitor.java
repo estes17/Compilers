@@ -365,4 +365,31 @@ public class Sem4Visitor extends ASTvisitor {
 		matchTypesExact(n.exp.type, theBoolType, n.exp.pos);
 		return null;
 	}
+
+	public Object visitCase(Case n) {
+		super.visitCase(n);
+		matchTypesExact(n.exp.type, theIntType, n.exp.pos);
+		return null;
+	}
+
+	public Object visitMethodDeclVoid(MethodDeclVoid n) {
+		super.visitMethodDeclVoid(n);
+		ClassDecl current = n.classDecl.superLink;
+		while (current != null) {
+			if (!current.methodTable.containsKey(n.name)) {
+				current = current.superLink;
+				continue;
+			}
+			final MethodDecl currentMethod = current.methodTable.get(n.name);
+			if (!(currentMethod instanceof MethodDeclVoid)) return null;
+			if (n.formals.size() != currentMethod.formals.size()) return null;
+			for (int i = 0; i < n.formals.size(); i++) {
+				final VarDecl parmType = n.formals.get(i);
+				matchTypesAssign(parmType.type, currentMethod.formals.get(i).type, parmType.pos);
+			}
+			n.superMethod = currentMethod;
+			break;
+		}
+		return null;
+	}
 }
