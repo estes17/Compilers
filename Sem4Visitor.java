@@ -81,8 +81,7 @@ public class Sem4Visitor extends ASTvisitor {
 		if (src instanceof NullType && (target instanceof IdentifierType || target instanceof ArrayType)) return true;
 		if (src instanceof ArrayType && target instanceof IdentifierType && ((IdentifierType) target).name.equals("Object")) return true;
 		if (src instanceof IdentifierType) {
-
-			IdentifierType parent = ((IdentifierType) src).link;
+			ClassDecl current = ((IdentifierType) src).link;
 
 		}
 		return false;
@@ -139,7 +138,7 @@ public class Sem4Visitor extends ASTvisitor {
 
 	private Type returnTypeFor(MethodDecl md) {
 		if (md instanceof MethodDeclVoid) return theVoidType;
-		return md.;
+		return ((MethodDeclNonVoid) md).rtnType;
 	}
 
 	public Object visitIntegerLiteral(IntegerLiteral n) {
@@ -283,5 +282,29 @@ public class Sem4Visitor extends ASTvisitor {
 		return null;
 	}
 
-	public Object 
+	public Object visitArrayLookup(ArrayLookup n) {
+		super.visitArrayLookup(n);
+		matchTypesExact(n.idxExp.type, theIntType, n.idxExp.pos);
+		if (n.arrExp.type == null || !(n.arrExp.type instanceof ArrayType)) return null;
+		n.type = n.arrExp.type;
+		return null;
+	}
+
+	public Object visitInstVarAccess(InstVarAccess n) {
+		super.visitInstVarAccess(n);
+		if (n.exp == null) return null;
+		n.varDec = instVarLookup(n.varName, n.type, n.pos, "Instance variable not defined");
+		if (n.varDec != null) n.type = n.varDec.type;
+		return null;
+	}
+
+	public Object visitCast(Cast n) {
+		super.visitCast(n);
+		matchTypesAssign(n.exp.type, n.castType, n.exp.pos);
+		matchTypesAssign(n.castType, n.exp.type, n.castType.pos);
+		n.type = n.castType;
+		return null;
+	}
+	
+	
 }
