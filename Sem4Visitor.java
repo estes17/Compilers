@@ -277,7 +277,7 @@ public class Sem4Visitor extends ASTvisitor {
 
 	public Object visitArrayLength(ArrayLength n) {
 		super.visitArrayLength(n);
-		if (n.exp.type == null || n.exp.type instanceof ArrayType) return null;
+		if (n.exp.type == null || !(n.exp.type instanceof ArrayType)) return null;
 		n.type = theIntType;
 		return null;
 	}
@@ -305,6 +305,30 @@ public class Sem4Visitor extends ASTvisitor {
 		n.type = n.castType;
 		return null;
 	}
-	
-	
+
+	public Object visitInstanceOf(InstanceOf n) {
+		super.visitInstanceOf(n);
+		matchTypesAssign(n.exp.type, n.checkType, n.exp.pos);
+		matchTypesAssign(n.checkType, n.exp.type, n.checkType.pos);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitNewObject(NewObject n){
+		super.visitNewObject(n);
+		n.type = n.objType;
+		return null;
+	}
+
+	public Object visitNewArray(NewArray n){
+		super.visitNewArray(n);
+		matchTypesExact(n.sizeExp.type, theIntType, n.sizeExp.pos);
+		n.type = new ArrayType(n.pos, n.type);
+		return null;
+	}
+
+	public Object visitCall(Call n) {
+		super.visitCall(n);
+		
+	}
 }
