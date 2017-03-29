@@ -39,6 +39,11 @@ public class Sem4Visitor extends ASTvisitor {
 	ClassDecl currentClass;
 	IdentifierType currentClassType;
 	IdentifierType currentSuperclassType;
+	BooleanType theBoolType;
+	IntegerType theIntType;
+	NullType theNullType;
+	VoidType theVoidType;
+	IdentifierType theStringType;
 	ErrorMsg errorMsg;
 	Hashtable<String, ClassDecl> globalSymTab;
 
@@ -50,6 +55,10 @@ public class Sem4Visitor extends ASTvisitor {
 
 	private void initInstanceVars() {
 		currentClass = null;
+		theBoolType = new BooleanType(0);
+		theIntType = new IntegerType(0);
+		theNullType = new NullType(0);
+		
 	}
 
 	private boolean matchTypesExact(Type have, Type need, int pos) {
@@ -103,4 +112,112 @@ public class Sem4Visitor extends ASTvisitor {
 		if (decl.instVarTable.containsKey(name)) return decl.instVarTable.get(name);
 		return null;
 	}
+
+	private MethodDecl methodLookup(String name, ClassDecl clas, int pos, String msg) {
+		ClassDecl current = clas;
+		while (current != null) {
+			if (current.methodTable.containsKey(name)) return current.methodTable.get(name);
+			current = current.superLink;
+		}
+		errorMsg.error(pos, msg);
+		return null;
+	}
+
+	private MethodDecl methodLookup(String name, Type t, int pos, String msg) {
+		if (t == null) return null;
+		if (!(t instanceof IdentifierType)) {
+			errorMsg.error(pos, msg);
+			return null;
+		}
+		final ClassDecl decl = ((IdentifierType) t).link;
+		if (decl.methodTable.containsKey(name)) return decl.methodTable.get(name);
+		return null;
+	}
+
+	private Type returnTypeFor(MethodDecl md) {
+		if (md instanceof MethodDeclVoid) return new VoidType(md.pos);
+		return md.;
+	}
+
+	public Object visitIntegerLiteral(IntegerLiteral n) {
+		this.visitIntegerLiteral(n);
+		n.type = theIntType;
+		return null;
+	}
+
+	public Object visitNull(Null n) {
+		super.visitNull(n);
+		n.type = theNullType;
+		return null;
+	}
+
+	public Object visitStringLiteral(StringLiteral n) {
+		this.visitStringLiteral(n);
+		n.type = theStringType;
+		return null;
+	}
+
+	public Object visitTrue(True n) {
+		this.visitTrue(n);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitFalse(False n) {
+		this.visitFalse(n);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitIdentifierExp(IdentifierExp n) {
+		this.visitIdentifierExp(n);
+		n.type = n.link.type;
+		return null;
+	}
+
+	public Object visitThis(This n) {
+		super.visitThis(n);
+		n.type = currentClassType;
+		return null;
+	}
+
+	public Object visitSuper(Super n) {
+		super.visitSuper(n);
+		n.type = currentSuperclassType;
+		return null;
+	}
+
+	public Object visitPlus(Plus n) {
+		super.visitPlus(n);
+		matchTypesExact(n.left.type, theIntType, n.left.pos);
+		matchTypesExact(n.right.type, theIntType, n.right.pos);
+		n.type = theIntType;
+		return null;
+	}
+
+	public Object visitMinus(Minus n) {
+		super.visitMinus(n);
+		matchTypesExact(n.left.type, theIntType, n.left.pos);
+		matchTypesExact(n.right.type, theIntType, n.right.pos);
+		n.type = theIntType;
+		return null;
+	}
+
+	public Object visitTimes(Times n) {
+		super.visitTimes(n);
+		matchTypesExact(n.left.type, theIntType, n.left.pos);
+		matchTypesExact(n.right.type, theIntType, n.right.pos);
+		n.type = theIntType;
+		return null;
+	}
+	
+	public Object visitDivide(Divide n){
+		super.visitDivide(n);
+		matchTypesExact(n.left.type, theIntType, n.left.pos);
+		matchTypesExact(n.right.type, theIntType, n.right.pos);
+		n.type = theIntType;
+		return null;
+	}
+	
+	
 }
