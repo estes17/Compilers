@@ -314,21 +314,55 @@ public class Sem4Visitor extends ASTvisitor {
 		return null;
 	}
 
-	public Object visitNewObject(NewObject n){
+	public Object visitNewObject(NewObject n) {
 		super.visitNewObject(n);
 		n.type = n.objType;
 		return null;
 	}
 
-	public Object visitNewArray(NewArray n){
+	public Object visitNewArray(NewArray n) {
 		super.visitNewArray(n);
 		matchTypesExact(n.sizeExp.type, theIntType, n.sizeExp.pos);
-		n.type = new ArrayType(n.pos, n.type);
+		n.type = new ArrayType(n.pos, n.objType);
 		return null;
 	}
 
 	public Object visitCall(Call n) {
 		super.visitCall(n);
-		
+		if (n.obj == null) return null;
+		n.methodLink = methodLookup(n.methName, n.type, n.pos, "Method not defined.");
+		if (n.methodLink == null) return null;
+		if (n.parms.size() != n.methodLink.formals.size()) return null;
+		for (int i = 0; i < n.parms.size(); i++) {
+			final Exp parmType = n.parms.get(i);
+			matchTypesAssign(parmType.type, n.methodLink.formals.get(i).type, parmType.pos);
+		}
+		n.type = n.methodLink instanceof MethodDeclVoid ? theVoidType : ((MethodDeclNonVoid) n.methodLink).rtnType;
+		return null;
+	}
+
+	public Object visitAssign(Assign n) {
+		super.visitAssign(n);
+		if (!(n.lhs instanceof IdentifierExp || n.lhs instanceof ArrayLookup || n.lhs instanceof InstVarAccess)) return null;
+		matchTypesAssign(n.lhs.type, n.rhs.type, n.lhs.pos);
+		return null;
+	}
+
+	public Object visitLocalVarDecl(LocalVarDecl n) {
+		super.visitLocalVarDecl(n);
+		matchTypesAssign(n.initExp.type, n.type, n.initExp.pos);
+		return null;
+	}
+
+	public Object visitIf(If n) {
+		super.visitIf(n);
+		matchTypesExact(n.exp.type, theBoolType, n.exp.pos);
+		return null;
+	}
+
+	public Object visitWhile(While n) {
+		super.visitWhile(n);
+		matchTypesExact(n.exp.type, theBoolType, n.exp.pos);
+		return null;
 	}
 }
