@@ -67,7 +67,13 @@ public class Sem4Visitor extends ASTvisitor {
 		}
 		if (src.equals(target)) return true;
 		if (src instanceof NullType && (target instanceof IdentifierType || target instanceof ArrayType)) return true;
-		if(src instanceof ArrayType && target instanceof IdentifierType)	??
+		if(src instanceof ArrayType && target instanceof IdentifierType && ((IdentifierType) target).name.equals("Object"))	return true;
+		if(src instanceof IdentifierType){
+			
+			IdentifierType parent = ((IdentifierType) src).link;
+			
+		}
+		return false;
 	}
 
 	private boolean matchTypesEqCompare(Type t1, Type t2, int pos) {
@@ -87,7 +93,10 @@ public class Sem4Visitor extends ASTvisitor {
 		return null;
 	}
 	
-	private InstVarDecl instVarLookup(String name, Type t, int pos){
-		
+	private InstVarDecl instVarLookup(String name, Type t, int pos, String msg){
+		if(t == null)	return null;
+		if(t instanceof IdentifierType)	return instVarLookup(name, ((IdentifierType) t).link, pos, msg);
+		errorMsg.error(pos, msg);
+		return null;
 	}
 }
