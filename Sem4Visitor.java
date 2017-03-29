@@ -55,10 +55,13 @@ public class Sem4Visitor extends ASTvisitor {
 
 	private void initInstanceVars() {
 		currentClass = null;
-		theBoolType = new BooleanType(0);
-		theIntType = new IntegerType(0);
-		theNullType = new NullType(0);
-		
+		theBoolType = new BooleanType(-1);
+		theIntType = new IntegerType(-1);
+		theNullType = new NullType(-1);
+		theVoidType = new VoidType(-1);
+		theStringType = new IdentifierType(-1, "String");
+		theStringType.link = globalSymTab.get("String");
+
 	}
 
 	private boolean matchTypesExact(Type have, Type need, int pos) {
@@ -135,12 +138,12 @@ public class Sem4Visitor extends ASTvisitor {
 	}
 
 	private Type returnTypeFor(MethodDecl md) {
-		if (md instanceof MethodDeclVoid) return new VoidType(md.pos);
+		if (md instanceof MethodDeclVoid) return theVoidType;
 		return md.;
 	}
 
 	public Object visitIntegerLiteral(IntegerLiteral n) {
-		this.visitIntegerLiteral(n);
+		super.visitIntegerLiteral(n);
 		n.type = theIntType;
 		return null;
 	}
@@ -152,25 +155,25 @@ public class Sem4Visitor extends ASTvisitor {
 	}
 
 	public Object visitStringLiteral(StringLiteral n) {
-		this.visitStringLiteral(n);
+		super.visitStringLiteral(n);
 		n.type = theStringType;
 		return null;
 	}
 
 	public Object visitTrue(True n) {
-		this.visitTrue(n);
+		super.visitTrue(n);
 		n.type = theBoolType;
 		return null;
 	}
 
 	public Object visitFalse(False n) {
-		this.visitFalse(n);
+		super.visitFalse(n);
 		n.type = theBoolType;
 		return null;
 	}
 
 	public Object visitIdentifierExp(IdentifierExp n) {
-		this.visitIdentifierExp(n);
+		super.visitIdentifierExp(n);
 		n.type = n.link.type;
 		return null;
 	}
@@ -210,14 +213,75 @@ public class Sem4Visitor extends ASTvisitor {
 		n.type = theIntType;
 		return null;
 	}
-	
-	public Object visitDivide(Divide n){
+
+	public Object visitDivide(Divide n) {
 		super.visitDivide(n);
 		matchTypesExact(n.left.type, theIntType, n.left.pos);
 		matchTypesExact(n.right.type, theIntType, n.right.pos);
 		n.type = theIntType;
 		return null;
 	}
-	
-	
+
+	public Object visitRemainder(Remainder n) {
+		super.visitRemainder(n);
+		matchTypesExact(n.left.type, theIntType, n.left.pos);
+		matchTypesExact(n.right.type, theIntType, n.right.pos);
+		n.type = theIntType;
+		return null;
+	}
+
+	public Object visitGreaterThan(GreaterThan n) {
+		super.visitGreaterThan(n);
+		matchTypesExact(n.left.type, theIntType, n.left.pos);
+		matchTypesExact(n.right.type, theIntType, n.right.pos);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitLessThan(LessThan n) {
+		super.visitLessThan(n);
+		matchTypesExact(n.left.type, theIntType, n.left.pos);
+		matchTypesExact(n.right.type, theIntType, n.right.pos);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitEquals(Equals n) {
+		super.visitEquals(n);
+		matchTypesEqCompare(n.left.type, n.right.type, n.pos);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitNot(Not n) {
+		super.visitNot(n);
+		matchTypesExact(n.exp.type, theBoolType, n.exp.pos);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitAnd(And n) {
+		super.visitAnd(n);
+		matchTypesExact(n.left.type, theBoolType, n.left.pos);
+		matchTypesExact(n.right.type, theBoolType, n.right.pos);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitOr(Or n) {
+		super.visitOr(n);
+		matchTypesExact(n.left.type, theBoolType, n.left.pos);
+		matchTypesExact(n.right.type, theBoolType, n.right.pos);
+		n.type = theBoolType;
+		return null;
+	}
+
+	public Object visitArrayLength(ArrayLength n) {
+		super.visitArrayLength(n);
+		if (n.exp.type == null || n.exp.type instanceof ArrayType) return null;
+		n.type = theIntType;
+		return null;
+	}
+
+	public Object 
 }
