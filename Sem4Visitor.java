@@ -67,11 +67,11 @@ public class Sem4Visitor extends ASTvisitor {
 		}
 		if (src.equals(target)) return true;
 		if (src instanceof NullType && (target instanceof IdentifierType || target instanceof ArrayType)) return true;
-		if(src instanceof ArrayType && target instanceof IdentifierType && ((IdentifierType) target).name.equals("Object"))	return true;
-		if(src instanceof IdentifierType){
-			
+		if (src instanceof ArrayType && target instanceof IdentifierType && ((IdentifierType) target).name.equals("Object")) return true;
+		if (src instanceof IdentifierType) {
+
 			IdentifierType parent = ((IdentifierType) src).link;
-			
+
 		}
 		return false;
 	}
@@ -92,11 +92,15 @@ public class Sem4Visitor extends ASTvisitor {
 		errorMsg.error(pos, msg);
 		return null;
 	}
-	
-	private InstVarDecl instVarLookup(String name, Type t, int pos, String msg){
-		if(t == null)	return null;
-		if(t instanceof IdentifierType)	return instVarLookup(name, ((IdentifierType) t).link, pos, msg);
-		errorMsg.error(pos, msg);
+
+	private InstVarDecl instVarLookup(String name, Type t, int pos, String msg) {
+		if (t == null) return null;
+		if (!(t instanceof IdentifierType)) {
+			errorMsg.error(pos, msg);
+			return null;
+		}
+		final ClassDecl decl = ((IdentifierType) t).link;
+		if (decl.instVarTable.containsKey(name)) return decl.instVarTable.get(name);
 		return null;
 	}
 }
